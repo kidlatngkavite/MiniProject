@@ -1,6 +1,7 @@
 from random import randint
-from os import system
+from os import system, path
 from time import sleep
+from playsound import playsound #requires playsound 1.2.2
 
 boardsize = 5       #default board size
 round = 0
@@ -11,6 +12,8 @@ playAgain = True
 turn = 0
 playerScore = 0
 computerScore = 0
+cannonSoundPath = path.dirname(__file__) + '\\Cannon.mp3'
+explosionSoundPath = path.dirname(__file__) + '\\Explosion.mp3'
 
 class Brd:
     def __init__(self, name, size, score, listofcoordinates=[]):
@@ -76,14 +79,7 @@ print(f"- Try to hit your opponent's Battleship by taking a guess between 1 and 
 print(f"- You have {numberGuess} turns to try to hit your oppponent's battleship")
 print("=" * 50 + "\n")
 player = input(f"what is your name:")
-
 system("cls")
-
-
-
-
-
-
 
 while True :
     round += 1
@@ -92,54 +88,53 @@ while True :
     enemyBrd = Brd("Computer", boardsize, computerScore, [])
     myBrd = Brd(player, boardsize, playerScore, [])
     myBrd.print(playerScore) 
+
+    #initialize ship positions
     print(f"Place your ship:")
     myShipRow = int(axisInput("Row"))
     myShipCol = int(axisInput("Col"))
-
-    #initialize ship positions
     enemyShipRow = randomNumber(enemyBrd.size)
     enemyShipCol = randomNumber(enemyBrd.size)
-    #myShipRow = randomNumber(myBrd.size)
-    #myShipCol = randomNumber(myBrd.size)   
-
     #place your ship on the map coordinates
     myBrd.listofcoordinates[myShipRow-1][myShipCol-1] = "∆"    
-
-
     #Print empty boards
     system("cls")
     print(f"Round: {round}")
     enemyBrd.print(computerScore)
     myBrd.print(playerScore) 
-
-
-
-
-
     #for troubleshooting
-    print(f"actual enemy position at {enemyShipRow},{enemyShipCol}")
-    print(f"adjusted enemy position at {enemyShipRow-2},{enemyShipCol-2}")
-    print(f"actual position of my ship at {myShipRow},{myShipCol}")
-    print(f"adjusted position of my ship at {myShipRow-2},{myShipCol-2}")
+    #print(f"actual enemy position at {enemyShipRow},{enemyShipCol}")
+    #print(f"adjusted enemy position at {enemyShipRow-2},{enemyShipCol-2}")
+    #print(f"actual position of my ship at {myShipRow},{myShipCol}")
+    #print(f"adjusted position of my ship at {myShipRow-2},{myShipCol-2}")
+    # Player's turn
     for attempt in range(1,numberGuess+1,1):
         print("\n")
-        guess_row = int(input("Guess Row:"))+2
-        guess_col = int(input("Guess Col:"))+2
-
+        #guess_row = int(input("Guess Row:"))+2
+        #guess_col = int(input("Guess Col:"))+2
+        guess_row = int(axisInput("Row"))
+        guess_col = int(axisInput("Col"))
         if guess_row == enemyShipRow and guess_col == enemyShipCol:
-            enemyBrd.listofcoordinates[guess_row-1][guess_col-1] = "⨻"
             system("cls")
             playerScore += 1
             print(f"Round: {round}")
             enemyBrd.print(computerScore)
             myBrd.print(playerScore)
+            print("You guessed row: %d column: %d" % (guess_row-2,guess_col-2))
+            playsound(cannonSoundPath)
+            enemyBrd.listofcoordinates[guess_row-1][guess_col-1] = "⨻"
+            system("cls")
+            print(f"Round: {round}")
+            enemyBrd.print(computerScore)
+            myBrd.print(playerScore)
             print("Congratulations! You sunk my battleship!")
+            playsound(explosionSoundPath)
             break
         else:
-            if (guess_row <= 2 or guess_row > boardsize +2) or (guess_col <= 2 or guess_col > boardsize + 2):
-                print("Out of bounds.")
-                sleep(1)
-            elif(enemyBrd.listofcoordinates[guess_row-1][guess_col-1] == "X"):
+            #if (guess_row <= 2 or guess_row > boardsize +2) or (guess_col <= 2 or guess_col > boardsize + 2):
+            #    print("Out of bounds.")
+            #    sleep(1)
+            if(enemyBrd.listofcoordinates[guess_row-1][guess_col-1] == "X"):
                 print("You guessed that one already!!!")
                 sleep(1)
             else:
@@ -148,50 +143,47 @@ while True :
                 print(f"Round: {round}")
                 enemyBrd.print(computerScore)
                 myBrd.print(playerScore)
+                print("You guessed row: %d column: %d" % (guess_row-2,guess_col-2))
+                playsound(cannonSoundPath)
                 print("You missed computer's battleship!")
                 sleep(1)
-
         print ("Turn %d \n" % (turn + 1) )
         system("cls")
         print(f"Round: {round}")
         enemyBrd.print(computerScore)
         myBrd.print(playerScore)
-
-
+        # Enemy's Turn
         print("Enemy is thinking!")
-        sleep(5)
+        sleep(2)
         while True :
             enemy_guess_row = randomNumber(myBrd.size)
             enemy_guess_col = randomNumber(myBrd.size)
-
             if enemy_guess_row == myShipRow and enemy_guess_col == myShipCol:
                 lost = True 
-                myBrd.listofcoordinates[enemy_guess_row-1][enemy_guess_col-1] = "⨻"
+                computerScore += 1
                 break
             else:
                 if(myBrd.listofcoordinates[enemy_guess_row-1][enemy_guess_col-1] == "X"):
                     continue
                 else:
-                    break
-                
-                
+                    myBrd.listofcoordinates[enemy_guess_row-1][enemy_guess_col-1] = "X"
+                    break                
+        system("cls")
+        print(f"Round: {round}")
+        enemyBrd.print(computerScore)
+        myBrd.print(playerScore)
+        print("Computer guessed row: %d column: %d" % (enemy_guess_row-2,enemy_guess_col-2))
+        playsound(cannonSoundPath)
         if lost :
+            myBrd.listofcoordinates[enemy_guess_row-1][enemy_guess_col-1] = "⨻"
             system("cls")
-            computerScore += 1
             print(f"Round: {round}")
             enemyBrd.print(computerScore)
             myBrd.print(playerScore)
-            print("Computer guessed row: %d column: %d" % (enemy_guess_row-2,enemy_guess_col-2))
-            print("You Lose!!!!")  
-
+            print("You Lose!!!!")
+            playsound(explosionSoundPath)
             break
-        else :
-            system("cls")
-            myBrd.listofcoordinates[enemy_guess_row-1][enemy_guess_col-1] = "X"
-            print(f"Round: {round}")
-            enemyBrd.print(computerScore)
-            myBrd.print(playerScore)
-            print("Computer guessed row: %d column: %d" % (enemy_guess_row-2,enemy_guess_col-2))
+        else :            
             print("Computer missed your battleship!")
             sleep(1)
     playagainanswer = input("Do you want to play again? press (y) to play again? ")
